@@ -9,6 +9,9 @@
 
 
 
+/**
+ * Base Game Mode
+ */
 UCLASS()
 class REPLAYDEMO_API ARDGameMode : public AGameMode
 {
