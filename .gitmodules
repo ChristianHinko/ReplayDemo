@@ -1,0 +1,3 @@
+[submodule "Plugins/ReplaySetup"]
+	path = Plugins/ReplaySetup
+	url = https://github.com/ChristianHinko/ReplaySetup.git
