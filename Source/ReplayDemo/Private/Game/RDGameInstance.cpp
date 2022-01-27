@@ -18,13 +18,38 @@ URDGameInstance::URDGameInstance(const FObjectInitializer& ObjectInitializer)
 }
 
 
-void URDGameInstance::RecordInstantReplay()
+void URDGameInstance::LoadComplete(const float LoadTime, const FString& MapName)
 {
-	FJsonSerializableArray ReplayOptions;
-	//ReplayOptions.Emplace(TEXT("ReplayStreamerOverride=InMemoryNetworkReplayStreaming"));
+	Super::LoadComplete(LoadTime, MapName);
 
-	StartRecordingReplay(InstantReplayName, InstantReplayFriendlyName, ReplayOptions);
+	if (GetWorld()->IsPlayingReplay() == false)
+	{
+		FJsonSerializableArray ReplayOptions;
+		//ReplayOptions.Emplace(TEXT("ReplayStreamerOverride=InMemoryNetworkReplayStreaming"));
+		//ReplayOptions.Emplace(TEXT("SkipSpawnSpectatorController"));
+
+		StartRecordingReplay(InstantReplayName, InstantReplayFriendlyName, ReplayOptions);
+	}
 }
+
+#if WITH_EDITOR
+FGameInstancePIEResult URDGameInstance::StartPlayInEditorGameInstance(ULocalPlayer* LocalPlayer, const FGameInstancePIEParameters& Params)
+{
+	const FGameInstancePIEResult& RetVal = Super::StartPlayInEditorGameInstance(LocalPlayer, Params);
+
+	if (GetWorld()->IsPlayingReplay() == false)
+	{
+		FJsonSerializableArray ReplayOptions;
+		//ReplayOptions.Emplace(TEXT("ReplayStreamerOverride=InMemoryNetworkReplayStreaming"));
+		//ReplayOptions.Emplace(TEXT("SkipSpawnSpectatorController"));
+
+		StartRecordingReplay(InstantReplayName, InstantReplayFriendlyName, ReplayOptions);
+	}
+	
+	return RetVal;
+}
+#endif // WITH_EDITOR
+
 void URDGameInstance::PlayInstantReplay()
 {
 	StopRecordingReplay();

@@ -26,8 +26,6 @@ public:
 	static const FString InstantReplayName;
 	static const FString InstantReplayFriendlyName;
 
-	/** Start recording the instant replay - needs to be called initially somewhere */
-	void RecordInstantReplay();
 	/** Play the instant replay */
 	void PlayInstantReplay();
 	/** Stop playing instant replay */
@@ -37,5 +35,9 @@ public:
 	bool IsPlayingInstantReplay() const;
 
 protected:
+	virtual void LoadComplete(const float LoadTime, const FString& MapName) override;
+#if WITH_EDITOR
+	virtual FGameInstancePIEResult StartPlayInEditorGameInstance(ULocalPlayer* LocalPlayer, const FGameInstancePIEParameters& Params) override;
+#endif // WITH_EDITOR
 
 };

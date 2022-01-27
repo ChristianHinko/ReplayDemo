@@ -17,5 +17,5 @@ void ARDGameState::HandleMatchHasStarted()
 {
 	Super::HandleMatchHasStarted();
 
-	GetGameInstance<URDGameInstance>()->RecordInstantReplay();
+	//GetGameInstance<URDGameInstance>()->RecordInstantReplay();
 }
