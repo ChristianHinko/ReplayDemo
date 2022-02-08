@@ -1,10 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+
 #include "Player/RDPlayerController.h"
 
 #include "Game/RDGameInstance.h"
-
-#include "Kismet/KismetSystemLibrary.h"
 
 
 
@@ -22,12 +21,13 @@ void ARDPlayerController::BeginPlay()
 	RDGameInstance = GetGameInstance<URDGameInstance>();
 }
 
+
 void ARDPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
 
 
-	InputComponent->BindAction(FName("InstantReplay"), IE_Pressed, this, &ARDPlayerController::ToggleInstantReplay);
+	InputComponent->BindAction(FName(TEXT("InstantReplay")), IE_Pressed, this, &ARDPlayerController::ToggleInstantReplay);
 
 }
 

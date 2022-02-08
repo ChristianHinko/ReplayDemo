@@ -26,6 +26,9 @@ public:
 	static const FString InstantReplayName;
 	static const FString InstantReplayFriendlyName;
 
+	FJsonSerializableArray InstantReplayReplayOptions;
+
+
 	/** Play the instant replay */
 	void PlayInstantReplay();
 	/** Stop playing instant replay */
@@ -39,5 +42,12 @@ protected:
 #if WITH_EDITOR
 	virtual FGameInstancePIEResult StartPlayInEditorGameInstance(ULocalPlayer* LocalPlayer, const FGameInstancePIEParameters& Params) override;
 #endif // WITH_EDITOR
+
+
+	/** Check if the instant replay is currently being recording */
+	bool IsRecordingInstantReplay() const;
+
+private:
+	FURL PreInstantReplayURL;
 
 };

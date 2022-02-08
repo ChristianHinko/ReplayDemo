@@ -5,6 +5,7 @@
 #include "Game/RDGameState.h"
 #include "Player/RDPlayerController.h"
 #include "Character/RDCharacter.h"
+#include "Character/RDSpectatorPawn.h"
 
 
 
@@ -17,5 +18,6 @@ ARDGameMode::ARDGameMode(const FObjectInitializer& ObjectInitializer)
 	ReplaySpectatorPlayerControllerClass = ARDPlayerController::StaticClass();
 
 	DefaultPawnClass = ARDCharacter::StaticClass();
+	SpectatorClass = ARDSpectatorPawn::StaticClass();
 
 }

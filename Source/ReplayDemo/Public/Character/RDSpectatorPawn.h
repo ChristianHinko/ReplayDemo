@@ -3,9 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/PlayerController.h"
+#include "GameFramework/SpectatorPawn.h"
 
-#include "RDPlayerController.generated.h"
+#include "RDSpectatorPawn.generated.h"
 
 
 class URDGameInstance;
@@ -13,23 +13,23 @@ class URDGameInstance;
 
 
 /**
- * Base Player Controller.
- * Handles input for instant replays
+ * 
  */
 UCLASS()
-class REPLAYDEMO_API ARDPlayerController : public APlayerController
+class REPLAYDEMO_API ARDSpectatorPawn : public ASpectatorPawn
 {
 	GENERATED_BODY()
 
 public:
-	ARDPlayerController(const FObjectInitializer& ObjectInitializer);
+	ARDSpectatorPawn(const FObjectInitializer& ObjectInitializer);
 
 protected:
 	virtual void BeginPlay() override;
-	virtual void SetupInputComponent() override;
+	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
-
+	// Actions
 	void ToggleInstantReplay();
+
 
 	// Cached Game Instance
 	URDGameInstance* RDGameInstance;

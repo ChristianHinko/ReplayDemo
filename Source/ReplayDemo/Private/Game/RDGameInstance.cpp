@@ -1,5 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+
 #include "Game/RDGameInstance.h"
 
 #include "Engine/DemoNetDriver.h"
@@ -14,6 +15,8 @@ const FString URDGameInstance::InstantReplayFriendlyName = TEXT("Instant Replay"
 URDGameInstance::URDGameInstance(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
+	// Configure our replay options
+	InstantReplayReplayOptions.Emplace(TEXT("LocalFileNetworkReplayStreamer"));
 
 }
 
@@ -22,13 +25,13 @@ void URDGameInstance::LoadComplete(const float LoadTime, const FString& MapName)
 {
 	Super::LoadComplete(LoadTime, MapName);
 
+	// Start recording our instant replay
 	if (GetWorld()->IsPlayingReplay() == false)
 	{
-		FJsonSerializableArray ReplayOptions;
-		//ReplayOptions.Emplace(TEXT("ReplayStreamerOverride=InMemoryNetworkReplayStreaming"));
-		//ReplayOptions.Emplace(TEXT("SkipSpawnSpectatorController"));
-
-		StartRecordingReplay(InstantReplayName, InstantReplayFriendlyName, ReplayOptions);
+		if (!IsRecordingInstantReplay())
+		{
+			StartRecordingReplay(InstantReplayName, InstantReplayFriendlyName, InstantReplayReplayOptions);
+		}
 	}
 }
 
@@ -37,55 +40,88 @@ FGameInstancePIEResult URDGameInstance::StartPlayInEditorGameInstance(ULocalPlay
 {
 	const FGameInstancePIEResult& RetVal = Super::StartPlayInEditorGameInstance(LocalPlayer, Params);
 
+	// Start recording our instant replay
 	if (GetWorld()->IsPlayingReplay() == false)
 	{
-		FJsonSerializableArray ReplayOptions;
-		//ReplayOptions.Emplace(TEXT("ReplayStreamerOverride=InMemoryNetworkReplayStreaming"));
-		//ReplayOptions.Emplace(TEXT("SkipSpawnSpectatorController"));
-
-		StartRecordingReplay(InstantReplayName, InstantReplayFriendlyName, ReplayOptions);
+		if (!IsRecordingInstantReplay())
+		{
+			StartRecordingReplay(InstantReplayName, InstantReplayFriendlyName, InstantReplayReplayOptions);
+		}
 	}
 	
 	return RetVal;
 }
 #endif // WITH_EDITOR
 
+
 void URDGameInstance::PlayInstantReplay()
 {
+	// Stop recording
 	StopRecordingReplay();
+
+	// Save our URL before Traveling to the instant replay
+	if (!IsPlayingInstantReplay())
+	{
+		PreInstantReplayURL = GetWorld()->URL;
+	}
+
+	// Play it
 	PlayReplay(InstantReplayName);
 }
 void URDGameInstance::StopInstantReplay()
 {
-	// TODO: UReplaySubsystem::bLoadDefaultMapOnStop feels broken because it
+	// NOTE: UReplaySubsystem::bLoadDefaultMapOnStop feels broken because it
 	// just calls the UEngine::Browse() function outta nowhere (which is a really sensitive function).
 	// 
 	// This ends up freezing the engine when calling StopRecordingReplay(). So for now we
 	// are just going to ensure bLoadDefaultMapOnStop is false when we call it here.
 	// 
 	// Possible work-arounds:
-	//		1) Load a Level manually via APlayerController::ClientTravel() or UWorld::ServerTravel()
-	//		2) Override UEngine::TickWorldTravel() and call StopRecordingReplay() there
-	//		3) Bind to the FCoreDelegates::OnBeginFrame delegate and call StopRecordingReplay() there
-	//			- But be sure to construct an FScopedConditionalWorldSwitcher so that the Editor Engine doesn't break
+	//		1) Load a Level manually via Client Travel / Server Travel.
+	//		2) Override UEngine::TickWorldTravel() and call StopRecordingReplay() in there.
+	//			- This is the correct place to use the Browse() function.
+	//		3) Bind to the FCoreDelegates::OnBeginFrame delegate and call StopRecordingReplay() there.
+	//			- But be sure to construct an FScopedConditionalWorldSwitcher so that the Editor Engine doesn't break.
+	//			- This feels very hacky of course but it is an option if you are avoiding making custom UEngine classes.
+	// 
+	// Chosen work-around: 1
+	//		- Which we probably would've done anyways since we want more flexability rather than just
+	//			loading the default map.
 	// 
 
 	
-	bool bLoadDefaultMapOnStop; // to keep track of the old value
-
-	UReplaySubsystem* ReplaySubsystem = GetSubsystem<UReplaySubsystem>();
-	if (IsValid(ReplaySubsystem))
+	// Stop replay playback
 	{
-		bLoadDefaultMapOnStop = ReplaySubsystem->bLoadDefaultMapOnStop;
-		ReplaySubsystem->bLoadDefaultMapOnStop = false;
+		bool bLoadDefaultMapOnStop; // to keep track of the old value
+
+		// Disable bLoadDefaultMapOnStop
+		UReplaySubsystem* ReplaySubsystem = GetSubsystem<UReplaySubsystem>();
+		if (IsValid(ReplaySubsystem))
+		{
+			bLoadDefaultMapOnStop = ReplaySubsystem->bLoadDefaultMapOnStop;
+			ReplaySubsystem->bLoadDefaultMapOnStop = false;
+		}
+
+
+		// Stop the replay playback
+		StopRecordingReplay();
+
+
+		// Recover bLoadDefaultMapOnStop
+		if (IsValid(ReplaySubsystem))
+		{
+			ReplaySubsystem->bLoadDefaultMapOnStop = bLoadDefaultMapOnStop;
+		}
 	}
 
-	// Stop the replay playback
-	StopRecordingReplay();
 
-	if (IsValid(ReplaySubsystem))
+	// Travel back to our original game
+	if (IsValid(GEngine))
 	{
-		ReplaySubsystem->bLoadDefaultMapOnStop = bLoadDefaultMapOnStop;
+		FURL TravelURL = PreInstantReplayURL;
+		TravelURL.Map = UWorld::RemovePIEPrefix(PreInstantReplayURL.Map);
+
+		GEngine->SetClientTravel(GetWorld(), *(TravelURL.ToString()), TRAVEL_Relative);
 	}
 
 }
@@ -102,7 +138,28 @@ bool URDGameInstance::IsPlayingInstantReplay() const
 
 			if (DemoNetDriver->IsPlaying() && ActiveReplayName == InstantReplayName)
 			{
-				// Instant Replay is playing!
+				// Instant replay is playing!
+				return true;
+			}
+
+		}
+	}
+
+	return false;
+}
+bool URDGameInstance::IsRecordingInstantReplay() const
+{
+	const UWorld* World = GetWorld();
+	if (IsValid(World))
+	{
+		const UDemoNetDriver* DemoNetDriver = World->GetDemoNetDriver();
+		if (IsValid(DemoNetDriver))
+		{
+			const FString& ActiveReplayName = DemoNetDriver->GetActiveReplayName();
+
+			if (DemoNetDriver->IsRecording() && ActiveReplayName == InstantReplayName)
+			{
+				// Instant replay being recorded!
 				return true;
 			}
 
