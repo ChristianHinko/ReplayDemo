@@ -26,7 +26,7 @@ public:
 	static const FString InstantReplayName;
 	static const FString InstantReplayFriendlyName;
 
-	FJsonSerializableArray InstantReplayReplayOptions;
+	FJsonSerializableArray InstantReplayAdditionalOptions;
 
 
 	/** Play the instant replay */

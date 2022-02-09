@@ -27,7 +27,7 @@ void ARDPlayerController::SetupInputComponent()
 	Super::SetupInputComponent();
 
 
-	InputComponent->BindAction(FName(TEXT("InstantReplay")), IE_Pressed, this, &ARDPlayerController::ToggleInstantReplay);
+	InputComponent->BindAction(FName(TEXT("InstantReplay")), IE_Pressed, this, &ThisClass::ToggleInstantReplay);
 
 }
 

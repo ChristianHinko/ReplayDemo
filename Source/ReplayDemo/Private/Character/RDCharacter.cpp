@@ -57,15 +57,15 @@ void ARDCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 
 
 	// Action
-	PlayerInputComponent->BindAction(FName("Jump"), IE_Pressed, this, &ARDCharacter::OnJumpPressed);
-	PlayerInputComponent->BindAction(FName("Jump"), IE_Released, this, &ARDCharacter::OnJumpReleased);
+	PlayerInputComponent->BindAction(FName("Jump"), IE_Pressed, this, &ThisClass::OnJumpPressed);
+	PlayerInputComponent->BindAction(FName("Jump"), IE_Released, this, &ThisClass::OnJumpReleased);
 
 	// Axis
-	PlayerInputComponent->BindAxis(FName("MoveForward"), this, &ARDCharacter::MoveForward);
-	PlayerInputComponent->BindAxis(FName("MoveRight"), this, &ARDCharacter::MoveRight);
+	PlayerInputComponent->BindAxis(FName("MoveForward"), this, &ThisClass::MoveForward);
+	PlayerInputComponent->BindAxis(FName("MoveRight"), this, &ThisClass::MoveRight);
 
-	PlayerInputComponent->BindAxis(FName("HorizontalLook"), this, &ARDCharacter::HorizontalLook);
-	PlayerInputComponent->BindAxis(FName("VerticalLook"), this, &ARDCharacter::VerticalLook);
+	PlayerInputComponent->BindAxis(FName("HorizontalLook"), this, &ThisClass::HorizontalLook);
+	PlayerInputComponent->BindAxis(FName("VerticalLook"), this, &ThisClass::VerticalLook);
 
 }
 

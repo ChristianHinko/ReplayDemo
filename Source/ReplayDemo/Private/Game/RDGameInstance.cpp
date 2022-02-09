@@ -16,7 +16,7 @@ URDGameInstance::URDGameInstance(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
 	// Configure our replay options
-	InstantReplayReplayOptions.Emplace(TEXT("LocalFileNetworkReplayStreamer"));
+	InstantReplayAdditionalOptions.Emplace(TEXT("LocalFileNetworkReplayStreamer"));
 
 }
 
@@ -30,7 +30,7 @@ void URDGameInstance::LoadComplete(const float LoadTime, const FString& MapName)
 	{
 		if (!IsRecordingInstantReplay())
 		{
-			StartRecordingReplay(InstantReplayName, InstantReplayFriendlyName, InstantReplayReplayOptions);
+			StartRecordingReplay(InstantReplayName, InstantReplayFriendlyName, InstantReplayAdditionalOptions);
 		}
 	}
 }
@@ -45,7 +45,7 @@ FGameInstancePIEResult URDGameInstance::StartPlayInEditorGameInstance(ULocalPlay
 	{
 		if (!IsRecordingInstantReplay())
 		{
-			StartRecordingReplay(InstantReplayName, InstantReplayFriendlyName, InstantReplayReplayOptions);
+			StartRecordingReplay(InstantReplayName, InstantReplayFriendlyName, InstantReplayAdditionalOptions);
 		}
 	}
 	
@@ -57,16 +57,21 @@ FGameInstancePIEResult URDGameInstance::StartPlayInEditorGameInstance(ULocalPlay
 void URDGameInstance::PlayInstantReplay()
 {
 	// Stop recording
-	StopRecordingReplay();
+	if (IsRecordingInstantReplay())
+	{
+		StopRecordingReplay();
+	}
 
 	// Save our URL before Traveling to the instant replay
 	if (!IsPlayingInstantReplay())
 	{
+		// NOTE: there is UWorld::URL and UEngine::LastURLFromWorld() but i dont think it matters which one you use
 		PreInstantReplayURL = GetWorld()->URL;
 	}
 
 	// Play it
-	PlayReplay(InstantReplayName);
+	FJsonSerializableArray AdditionalOptions;
+	PlayReplay(InstantReplayName, nullptr, AdditionalOptions);
 }
 void URDGameInstance::StopInstantReplay()
 {

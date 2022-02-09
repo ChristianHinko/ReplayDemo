@@ -28,7 +28,7 @@ void ARDSpectatorPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 
 
 	// Action
-	PlayerInputComponent->BindAction(FName(TEXT("InstantReplay")), IE_Pressed, this, &ARDSpectatorPawn::ToggleInstantReplay);
+	PlayerInputComponent->BindAction(FName(TEXT("InstantReplay")), IE_Pressed, this, &ThisClass::ToggleInstantReplay);
 
 }
 
